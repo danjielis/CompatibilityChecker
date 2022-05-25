@@ -90,18 +90,16 @@ namespace CompatibilityChecker
             this.dataGridView1.Refresh();
             this.textBox1.Text = "";
 
-            // rnd obj, rnd collection, rnd wire collections (two collections since it is assumed that duplicates exists on one side only, either h1 or h2)
+            // rnd obj, rnd collection, wire collection
             Random rnd = new Random();
             List<Harness_drawing> Random_harness_drawing_list;
-            List<Harness_wires> Random_harness_wire_list_housing1;
-            List<Harness_wires> Random_harness_wire_list_housing2;
+            List<Harness_wires> Random_harness_wire_list_housing;
 
             for (int outer_loop = 0; outer_loop < 1; outer_loop++) //for multiple run test
             {
                 // each iteration init empty rnd collection
                 Random_harness_drawing_list = new List<Harness_drawing>();
-                Random_harness_wire_list_housing1 = new List<Harness_wires>();
-                Random_harness_wire_list_housing2 = new List<Harness_wires>();
+                Random_harness_wire_list_housing = new List<Harness_wires>();
 
                 // get rnd number of selections to be made (range 3:4)
                 int selection_count = rnd.Next(3, 5);
@@ -116,7 +114,6 @@ namespace CompatibilityChecker
                     this.textBox1.Text += hd.ID + " "; //just for task understanding
                 }
 
-
                 // check whether rnd harness collection' wires do not contain duplicates, if so add datagrid row msg in req format
                 // for each harness out of rnd list of harnesses
                 foreach (Harness_drawing rhd in Random_harness_drawing_list)
@@ -124,41 +121,33 @@ namespace CompatibilityChecker
                     // and each coresponding wire, that has the same harness ID
                     foreach (Harness_wires hw in Harness_wires_list.FindAll(i => i.Harness_ID == rhd.ID))
                     {
-                        Harness_wires temp_hw_h1 = Random_harness_wire_list_housing1.Find(x => x.Housing_1 == hw.Housing_1);
-                        Harness_wires temp_hw_h2 = Random_harness_wire_list_housing2.Find(x => x.Housing_2 == hw.Housing_2);
+                        Harness_wires temp = Random_harness_wire_list_housing.Find(x => x.Housing_1 == hw.Housing_1 ||
+                                                                                        x.Housing_1 == hw.Housing_2 ||
+                                                                                        x.Housing_2 == hw.Housing_1 ||
+                                                                                        x.Housing_2 == hw.Housing_2);
 
-                        // if temp housing list does not containt certain wire, add it
-                        // else if contains, then print that a duplicate has been found
+                        //// if temp housing list does not containt certain wire, add it
+                        //// else if contains, then print that a duplicate has been found
 
-                        if (temp_hw_h1 == null)
-                            Random_harness_wire_list_housing1.Add(hw);
+                        if (temp == null)
+                            Random_harness_wire_list_housing.Add(hw);
                         else
                         {
-                            Harness_drawing first = Harness_drawing_list.Find(x => x.ID == temp_hw_h1.Harness_ID);
+                            Harness_drawing first = Harness_drawing_list.Find(x => x.ID == temp.Harness_ID);
                             Harness_drawing second = Harness_drawing_list.Find(x => x.ID == hw.Harness_ID);
 
-                            this.dataGridView1.Rows.Add(temp_hw_h1.Harness_ID.ToString() + ", version: " + first.Harness_version, 
-                                                        hw.Harness_ID.ToString() + ", version: " + second.Harness_version, 
-                                                        first.Drawing_version,
-                                                        hw.Housing_1);
-                            break;
-                        }
+                            // which housing matched
+                            String matching_housing = null;
+                            if (temp.Housing_1 == hw.Housing_1 || temp.Housing_2 == hw.Housing_1)
+                                matching_housing = hw.Housing_1;
+                            else if (temp.Housing_1 == hw.Housing_2 || temp.Housing_2 == hw.Housing_2)
+                                matching_housing = hw.Housing_2;
 
-
-                        if (temp_hw_h2 == null)
-                            Random_harness_wire_list_housing2.Add(hw);
-                        else
-                        {
-                            Harness_drawing first = Harness_drawing_list.Find(x => x.ID == temp_hw_h2.Harness_ID);
-                            Harness_drawing second = Harness_drawing_list.Find(x => x.ID == hw.Harness_ID);
-
-                            this.dataGridView1.Rows.Add(temp_hw_h2.Harness_ID.ToString() + ", version: " + first.Harness_version,
+                            this.dataGridView1.Rows.Add(temp.Harness_ID.ToString() + ", version: " + first.Harness_version,
                                                         hw.Harness_ID.ToString() + ", version: " + second.Harness_version,
-                                                        first.Drawing_version,
-                                                        hw.Housing_2);
-                            break;
+                                                        "1 " + first.Drawing_version + " 2 " + second.Drawing_version,
+                                                        matching_housing);
                         }
-
                     }
                 }
             }
